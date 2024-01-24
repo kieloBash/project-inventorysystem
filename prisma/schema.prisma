@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  Employee
+  Admin
+}
+
+model User {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  name  String
+  email String
+  role  Role
+}
+
+model Miner {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  name  String
+  carts Cart[]
+}
+
+model Cart {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  items   Item[]
+  free    Int    @default(0)
+  minerId String @map("minerId") @db.ObjectId
+  miner   Miner  @relation(fields: [minerId], references: [id])
+}
+
+model Category {
+  id      String    @id @default(auto()) @map("_id") @db.ObjectId
+  name    String
+  details String?
+  items   Item[]
+  package Package[]
+}
+
+enum Status {
+  Pending
+  Confirmed
+}
+
+model Item {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  status        Status
+  dateConfirmed DateTime
+
+  cartId     String   @map("cartId") @db.ObjectId
+  cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  categoryId String   @map("categoryId") @db.ObjectId
+  category   Category @relation(fields: [categoryId], references: [id])
+}
+
+model Package {
+  id              String @id @default(auto()) @map("_id") @db.ObjectId
+  status          Status
+  stocks          Int    @default(0)
+  invested_amount Int    @default(0)
+  earned_amount   Int    @default(0)
+  balance         Int    @default(0)
+
+  categoryId String    @map("categoryId") @db.ObjectId
+  category   Category  @relation(fields: [categoryId], references: [id])
+  deposits   Deposit[]
+}
+
+model Deposit {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  stocks          Int      @default(0)
+  invested_amount Int      @default(0)
+  date            DateTime
+
+  packageId String  @map("packageId") @db.ObjectId
+  package   Package @relation(fields: [packageId], references: [id])
+}
